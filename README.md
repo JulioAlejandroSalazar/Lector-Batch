@@ -14,9 +14,8 @@ Tablas principales:
 - `cuentas_anuales`  
 
 ## Ejecución
+```bash
 git clone <repo-url>
 cd lector_batch
 mvn clean install
 mvn spring-boot:run
-
-
