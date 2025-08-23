@@ -3,8 +3,11 @@ package com.duoc.lector_batch.processor;
 import java.math.BigDecimal;
 import com.duoc.lector_batch.model.Transaccion;
 import org.springframework.batch.item.ItemProcessor;
+import org.springframework.stereotype.Component;
 
+@Component
 public class TransaccionItemProcessor implements ItemProcessor<Transaccion, Transaccion> {
+
     @Override
     public Transaccion process(Transaccion t) {
         if (t.getMonto().compareTo(BigDecimal.ZERO) <= 0) {
@@ -12,4 +15,5 @@ public class TransaccionItemProcessor implements ItemProcessor<Transaccion, Tran
         }
         return t;
     }
+
 }

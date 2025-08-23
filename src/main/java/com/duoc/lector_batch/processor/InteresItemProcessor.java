@@ -1,11 +1,13 @@
 package com.duoc.lector_batch.processor;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import com.duoc.lector_batch.model.Interes;
 import org.springframework.batch.item.ItemProcessor;
+import org.springframework.stereotype.Component;
 
+@Component
 public class InteresItemProcessor implements ItemProcessor<Interes, Interes> {
+
     @Override
     public Interes process(Interes item) throws Exception {
         // loguear los valores leídos
@@ -21,5 +23,6 @@ public class InteresItemProcessor implements ItemProcessor<Interes, Interes> {
         item.setSaldoFinal(saldoInicial.add(interes));
         return item;
     }
+
 }
 
