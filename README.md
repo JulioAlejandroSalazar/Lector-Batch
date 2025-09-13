@@ -59,14 +59,14 @@ git clone <repo-url>
 Móvil
 - https://localhost:7443/bff/movil/transacciones
 - https://localhost:7443/bff/movil/intereses
-- https://localhost:7443/bff/movil/cuentas-anuales
+- https://localhost:7443/bff/movil/cuentas_anuales
 
 Web
 - https://localhost:8443/bff/web/transacciones
 - https://localhost:8443/bff/web/intereses
-- https://localhost:8443/bff/web/cuentas-anuales
+- https://localhost:8443/bff/web/cuentas_anuales
 
 Cajero
 - https://localhost:9443/bff/cajero/transacciones
 - https://localhost:9443/bff/cajero/intereses
-- https://localhost:9443/bff/cajero/cuentas-anuales
+- https://localhost:9443/bff/cajero/cuentas_anuales
