@@ -3,9 +3,7 @@ package com.duoc.lector_batch.processor;
 import java.math.BigDecimal;
 import com.duoc.lector_batch.model.Interes;
 import org.springframework.batch.item.ItemProcessor;
-import org.springframework.stereotype.Component;
 
-@Component
 public class InteresItemProcessor implements ItemProcessor<Interes, Interes> {
 
     @Override
