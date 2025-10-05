@@ -13,15 +13,19 @@ import com.duoc.lector_batch.processor.CuentaAnualItemProcessor;
 @Configuration
 public class ProcessorConfig {
 
+    @Bean
     public ItemProcessor<Transaccion, Transaccion> transaccionProcessor() {
         return new TransaccionItemProcessor();
     }
 
+    @Bean
     public ItemProcessor<Interes, Interes> interesProcessor() {
         return new InteresItemProcessor();
     }
 
+    @Bean
     public ItemProcessor<CuentaAnual, CuentaAnual> cuentaAnualProcessor() {
         return new CuentaAnualItemProcessor();
     }
 }
+

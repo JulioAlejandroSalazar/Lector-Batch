@@ -11,6 +11,7 @@ import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.batch.BatchAutoConfiguration;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Bean;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -24,7 +25,7 @@ import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemWriter;
 
-@SpringBootApplication
+@SpringBootApplication(exclude = { BatchAutoConfiguration.class })
 @EnableBatchProcessing
 @EnableFeignClients
 public class BatchDemoApplication {
