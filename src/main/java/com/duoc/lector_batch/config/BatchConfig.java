@@ -9,23 +9,88 @@ import com.duoc.lector_batch.processor.TransaccionItemProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.*;
+import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.job.builder.JobBuilder;
-import org.springframework.batch.core.listener.JobExecutionListenerSupport;
-import org.springframework.batch.core.listener.StepExecutionListenerSupport;
+import org.springframework.batch.core.launch.JobLauncher;
+import org.springframework.batch.core.launch.support.SimpleJobLauncher;
 import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.repository.support.JobRepositoryFactoryBean;
 import org.springframework.batch.core.step.builder.StepBuilder;
-import org.springframework.batch.item.*;
+import org.springframework.batch.item.ItemReader;
+import org.springframework.batch.item.ItemWriter;
+import org.springframework.batch.support.transaction.ResourcelessTransactionManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
+@EnableBatchProcessing
 public class BatchConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(BatchConfig.class);
 
-    // job para interes
+    // --------------------------
+    // job repository en memoria
+    // --------------------------
+    @Bean
+    public JobRepository jobRepository() throws Exception {
+        JobRepositoryFactoryBean factory = new JobRepositoryFactoryBean();
+        factory.setTransactionManager(new ResourcelessTransactionManager());
+        factory.afterPropertiesSet();
+        return factory.getObject();
+    }
+
+    @Bean
+    public JobLauncher jobLauncher(JobRepository jobRepository) throws Exception {
+        SimpleJobLauncher launcher = new SimpleJobLauncher();
+        launcher.setJobRepository(jobRepository);
+        launcher.afterPropertiesSet();
+        return launcher;
+    }
+
+    // --------------------------
+    // listener para job
+    // --------------------------
+    @Bean
+    public JobExecutionListener jobExecutionListener() {
+        return new JobExecutionListener() {
+            @Override
+            public void beforeJob(JobExecution jobExecution) {
+                logger.info("Iniciando job: {}", jobExecution.getJobInstance().getJobName());
+            }
+
+            @Override
+            public void afterJob(JobExecution jobExecution) {
+                logger.info("Finalizó job con estado: {}", jobExecution.getStatus());
+            }
+        };
+    }
+
+    // --------------------------
+    // listener para step
+    // --------------------------
+    @Bean
+    public StepExecutionListener stepExecutionListener() {
+        return new StepExecutionListener() {
+            @Override
+            public void beforeStep(StepExecution stepExecution) {
+                logger.info("Iniciando step: {}", stepExecution.getStepName());
+            }
+
+            @Override
+            public ExitStatus afterStep(StepExecution stepExecution) {
+                logger.info("Finalizó step con {} items procesados", stepExecution.getWriteCount());
+                return stepExecution.getExitStatus();
+            }
+        };
+    }
+
+    // --------------------------
+    // JOBS Y STEPS
+    // --------------------------
+
+    // --- INTERES ---
     @Bean
     public Job interesJob(JobRepository jobRepository, Step interesStep) {
         return new JobBuilder("interesJob", jobRepository)
@@ -34,20 +99,19 @@ public class BatchConfig {
                 .build();
     }
 
-    // step para interes
     @Bean
     public Step interesStep(JobRepository jobRepository,
-                               PlatformTransactionManager transactionManager,
-                               ItemReader<Interes> itemReader,
-                               InteresItemProcessor itemProcessor,
-                               ItemWriter<Interes> itemWriter) {
+                            PlatformTransactionManager transactionManager,
+                            ItemReader<Interes> itemReader,
+                            InteresItemProcessor itemProcessor,
+                            ItemWriter<Interes> itemWriter) {
         return new StepBuilder("interesStep", jobRepository)
-                .<Interes, Interes>chunk(5, transactionManager) // procesa 5
+                .<Interes, Interes>chunk(5, transactionManager)
                 .reader(itemReader)
                 .processor(itemProcessor)
                 .writer(itemWriter)
                 .taskExecutor(new SimpleAsyncTaskExecutor())
-                .throttleLimit(3) // 3 hilos max
+                .throttleLimit(3)
                 .listener(stepExecutionListener())
                 .faultTolerant()
                 .skipLimit(5)
@@ -55,7 +119,7 @@ public class BatchConfig {
                 .build();
     }
 
-    // job para cuenta anual
+    // --- CUENTA ANUAL ---
     @Bean
     public Job cuentaAnualJob(JobRepository jobRepository, Step cuentaAnualStep) {
         return new JobBuilder("cuentaAnualJob", jobRepository)
@@ -64,7 +128,6 @@ public class BatchConfig {
                 .build();
     }
 
-    // step para cuenta anual
     @Bean
     public Step cuentaAnualStep(JobRepository jobRepository,
                                 PlatformTransactionManager transactionManager,
@@ -85,7 +148,7 @@ public class BatchConfig {
                 .build();
     }
 
-    // job para transaccion
+    // --- TRANSACCION ---
     @Bean
     public Job transaccionJob(JobRepository jobRepository, Step transaccionStep) {
         return new JobBuilder("transaccionJob", jobRepository)
@@ -94,7 +157,6 @@ public class BatchConfig {
                 .build();
     }
 
-    // step para transaccion
     @Bean
     public Step transaccionStep(JobRepository jobRepository,
                                 PlatformTransactionManager transactionManager,
@@ -113,39 +175,5 @@ public class BatchConfig {
                 .skipLimit(5)
                 .skip(Exception.class)
                 .build();
-    }
-
-
-    // listener para job
-    @Bean
-    public JobExecutionListener jobExecutionListener() {
-        return new JobExecutionListenerSupport() {
-            @Override
-            public void beforeJob(JobExecution jobExecution) {
-                logger.info("Iniciando job: {}", jobExecution.getJobInstance().getJobName());
-            }
-
-            @Override
-            public void afterJob(JobExecution jobExecution) {
-                logger.info("Finalizó job con estado: {}", jobExecution.getStatus());
-            }
-        };
-    }
-
-    // listener para step
-    @Bean
-    public StepExecutionListener stepExecutionListener() {
-        return new StepExecutionListenerSupport() {
-            @Override
-            public void beforeStep(StepExecution stepExecution) {
-                logger.info("Iniciando step: {}", stepExecution.getStepName());
-            }
-
-            @Override
-            public ExitStatus afterStep(StepExecution stepExecution) {
-                logger.info("Finalizó step con {} items procesados", stepExecution.getWriteCount());
-                return stepExecution.getExitStatus();
-            }
-        };
     }
 }
