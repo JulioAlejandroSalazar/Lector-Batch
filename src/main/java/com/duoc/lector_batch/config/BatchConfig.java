@@ -31,12 +31,20 @@ public class BatchConfig {
     private static final Logger logger = LoggerFactory.getLogger(BatchConfig.class);
 
     // --------------------------
+    // transaction manager en memoria
+    // --------------------------
+    @Bean
+    public PlatformTransactionManager transactionManager() {
+        return new ResourcelessTransactionManager();
+    }
+
+    // --------------------------
     // job repository en memoria
     // --------------------------
     @Bean
     public JobRepository jobRepository() throws Exception {
         JobRepositoryFactoryBean factory = new JobRepositoryFactoryBean();
-        factory.setTransactionManager(new ResourcelessTransactionManager());
+        factory.setTransactionManager(transactionManager());
         factory.afterPropertiesSet();
         return factory.getObject();
     }
@@ -101,10 +109,10 @@ public class BatchConfig {
 
     @Bean
     public Step interesStep(JobRepository jobRepository,
-                            PlatformTransactionManager transactionManager,
                             ItemReader<Interes> itemReader,
                             InteresItemProcessor itemProcessor,
-                            ItemWriter<Interes> itemWriter) {
+                            ItemWriter<Interes> itemWriter,
+                            PlatformTransactionManager transactionManager) {
         return new StepBuilder("interesStep", jobRepository)
                 .<Interes, Interes>chunk(5, transactionManager)
                 .reader(itemReader)
@@ -130,10 +138,10 @@ public class BatchConfig {
 
     @Bean
     public Step cuentaAnualStep(JobRepository jobRepository,
-                                PlatformTransactionManager transactionManager,
                                 ItemReader<CuentaAnual> itemReader,
                                 CuentaAnualItemProcessor itemProcessor,
-                                ItemWriter<CuentaAnual> itemWriter) {
+                                ItemWriter<CuentaAnual> itemWriter,
+                                PlatformTransactionManager transactionManager) {
         return new StepBuilder("cuentaAnualStep", jobRepository)
                 .<CuentaAnual, CuentaAnual>chunk(5, transactionManager)
                 .reader(itemReader)
@@ -159,10 +167,10 @@ public class BatchConfig {
 
     @Bean
     public Step transaccionStep(JobRepository jobRepository,
-                                PlatformTransactionManager transactionManager,
                                 ItemReader<Transaccion> itemReader,
                                 TransaccionItemProcessor itemProcessor,
-                                ItemWriter<Transaccion> itemWriter) {
+                                ItemWriter<Transaccion> itemWriter,
+                                PlatformTransactionManager transactionManager) {
         return new StepBuilder("transaccionStep", jobRepository)
                 .<Transaccion, Transaccion>chunk(5, transactionManager)
                 .reader(itemReader)
