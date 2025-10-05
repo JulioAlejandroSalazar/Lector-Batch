@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.job.builder.JobBuilder;
+import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
@@ -15,6 +16,7 @@ import org.springframework.batch.item.ItemWriter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
+import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
 @EnableBatchProcessing
@@ -23,7 +25,7 @@ public class BatchConfig {
     private static final Logger logger = LoggerFactory.getLogger(BatchConfig.class);
 
     // --------------------------
-    // listener para job
+    // listeners
     // --------------------------
     @Bean
     public JobExecutionListener jobExecutionListener() {
@@ -40,9 +42,6 @@ public class BatchConfig {
         };
     }
 
-    // --------------------------
-    // listener para step
-    // --------------------------
     @Bean
     public StepExecutionListener stepExecutionListener() {
         return new StepExecutionListener() {
@@ -60,16 +59,16 @@ public class BatchConfig {
     }
 
     // --------------------------
-    // JOBS Y STEPS
+    // STEPS
     // --------------------------
-
-    // --- TRANSACCION ---
     @Bean
-    public Step transaccionStep(ItemReader<Transaccion> transaccionReader,
-                                ItemWriter<Transaccion> transaccionWriter,
-                                ItemProcessor<Transaccion, Transaccion> transaccionProcessor) {
-        return new StepBuilder("transaccionStep")
-                .<Transaccion, Transaccion>chunk(5)
+    public Step transaccionStep(JobRepository jobRepository,
+                                PlatformTransactionManager transactionManager,
+                                ItemReader<Transaccion> transaccionReader,
+                                ItemProcessor<Transaccion, Transaccion> transaccionProcessor,
+                                ItemWriter<Transaccion> transaccionWriter) {
+        return new StepBuilder("transaccionStep", jobRepository)
+                .<Transaccion, Transaccion>chunk(5, transactionManager)
                 .reader(transaccionReader)
                 .processor(transaccionProcessor)
                 .writer(transaccionWriter)
@@ -83,20 +82,13 @@ public class BatchConfig {
     }
 
     @Bean
-    public Job transaccionJob(Step transaccionStep) {
-        return new JobBuilder("transaccionJob")
-                .listener(jobExecutionListener())
-                .start(transaccionStep)
-                .build();
-    }
-
-    // --- INTERES ---
-    @Bean
-    public Step interesStep(ItemReader<Interes> interesReader,
-                            ItemWriter<Interes> interesWriter,
-                            ItemProcessor<Interes, Interes> interesProcessor) {
-        return new StepBuilder("interesStep")
-                .<Interes, Interes>chunk(5)
+    public Step interesStep(JobRepository jobRepository,
+                            PlatformTransactionManager transactionManager,
+                            ItemReader<Interes> interesReader,
+                            ItemProcessor<Interes, Interes> interesProcessor,
+                            ItemWriter<Interes> interesWriter) {
+        return new StepBuilder("interesStep", jobRepository)
+                .<Interes, Interes>chunk(5, transactionManager)
                 .reader(interesReader)
                 .processor(interesProcessor)
                 .writer(interesWriter)
@@ -110,20 +102,13 @@ public class BatchConfig {
     }
 
     @Bean
-    public Job interesJob(Step interesStep) {
-        return new JobBuilder("interesJob")
-                .listener(jobExecutionListener())
-                .start(interesStep)
-                .build();
-    }
-
-    // --- CUENTA ANUAL ---
-    @Bean
-    public Step cuentaAnualStep(ItemReader<CuentaAnual> cuentaAnualReader,
-                                ItemWriter<CuentaAnual> cuentaAnualWriter,
-                                ItemProcessor<CuentaAnual, CuentaAnual> cuentaAnualProcessor) {
-        return new StepBuilder("cuentaAnualStep")
-                .<CuentaAnual, CuentaAnual>chunk(5)
+    public Step cuentaAnualStep(JobRepository jobRepository,
+                                PlatformTransactionManager transactionManager,
+                                ItemReader<CuentaAnual> cuentaAnualReader,
+                                ItemProcessor<CuentaAnual, CuentaAnual> cuentaAnualProcessor,
+                                ItemWriter<CuentaAnual> cuentaAnualWriter) {
+        return new StepBuilder("cuentaAnualStep", jobRepository)
+                .<CuentaAnual, CuentaAnual>chunk(5, transactionManager)
                 .reader(cuentaAnualReader)
                 .processor(cuentaAnualProcessor)
                 .writer(cuentaAnualWriter)
@@ -136,9 +121,28 @@ public class BatchConfig {
                 .build();
     }
 
+    // --------------------------
+    // JOBS
+    // --------------------------
     @Bean
-    public Job cuentaAnualJob(Step cuentaAnualStep) {
-        return new JobBuilder("cuentaAnualJob")
+    public Job transaccionJob(JobRepository jobRepository, Step transaccionStep) {
+        return new JobBuilder("transaccionJob", jobRepository)
+                .listener(jobExecutionListener())
+                .start(transaccionStep)
+                .build();
+    }
+
+    @Bean
+    public Job interesJob(JobRepository jobRepository, Step interesStep) {
+        return new JobBuilder("interesJob", jobRepository)
+                .listener(jobExecutionListener())
+                .start(interesStep)
+                .build();
+    }
+
+    @Bean
+    public Job cuentaAnualJob(JobRepository jobRepository, Step cuentaAnualStep) {
+        return new JobBuilder("cuentaAnualJob", jobRepository)
                 .listener(jobExecutionListener())
                 .start(cuentaAnualStep)
                 .build();

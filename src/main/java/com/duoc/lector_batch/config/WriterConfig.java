@@ -1,9 +1,6 @@
 package com.duoc.lector_batch.config;
 
-import javax.sql.DataSource;
-import org.springframework.batch.item.database.JdbcBatchItemWriter;
 import org.springframework.batch.item.ItemWriter;
-import org.springframework.batch.item.database.BeanPropertyItemSqlParameterSourceProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import com.duoc.lector_batch.model.Transaccion;
